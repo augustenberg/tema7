@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+        header {
+            display: flex;
+            margin: 1em 0 1em;
+        }
+
+        body {
+            font-family: sans-serif;
+            -webkit-text-stroke: 0.5px black;
+            -webkit-text-fill-color: white;
+        }
+
+        button {
+            margin-right: 0.5em;
+        }
+
+        .valgt {
+            -webkit-text-stroke: 0.5px red;
+            -webkit-text-fill-color: red;
+        }
+
+        img {
+            width: 100%;
+            border-radius: 25px;
+        }
+
+        main {
+            padding: 0 10vw;
+        }
+
+        #list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-gap: 0.5em;
+        }
+
+        #loop-person {
+            border: 1px grey solid;
+            border-radius: 25px;
+            padding: 12.5px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        button {
+            border-radius: 8px;
+            margin-right: 0.5em;
+        }
+
+        /*_____POPOP_____*/
+
+        #popop {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba (0, 0, 0, 0.8);
+            display: none;
+            overflow: scroll;
+        }
+
+        #popop article {
+            width: 80vw;
+            display: flex;
+            margin: 4rem auto;
+            border-radius: 25px;
+            padding: 12px;
+            background-color: white;
+        }
+
+        #popop p {
+            font-family: monospace;
+            font-weight: bolder;
+        }
+
+        span {
+            font-weight: normal;
+        }
+
+        #luk {
+            position: fixed;
+            top: 1em;
+            right: 2em;
+            background-color: white;
+            color: black;
+            border-radius: 5px;
+            padding: 0.5em;
+            cursor: pointer;
+        }
+
+        #popop img {
+            width: 60%;
+            margin-right: 1em;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ______POPOP______ -->
+    <section id="popop">
+        <article>
+            <p id="luk">X</p>
+            <img src="" alt="" />
+            <div>
+                <h2>Navn</h2>
+                <p>Kategori: <span class="kategori"></span></p>
+                <p>Navn: <span class="navn"></span></p>
+                <p>Pris: <span class="pris"></span></p>
+                <p>Kort: <span class="kort"></span></p>
+                <p>Lang: <span class="lang"></span></p>
+                <p>Oprindelse: <span class="oprindelse"></span></p>
+            </div>
+        </article>
+    </section>
+
+    <template>
+        <article class="loop-person">
+            <h2></h2>
+            <img src="" alt="" />
+            <p></p>
+        </article>
+    </template>
+
+
+
+    <!-- ______FILTER KNAPPER / MENU KNAPPER______ -->
+    <main>
+        <h1>Menu</h1>
+        <header>
+            <button class="filter valgt" data-køn="alle">Alle retter</button>
+            <button class="filter" data-køn="forretter">Forretter</button>
+            <button class="filter" data-køn="hovedretter">Hovedretter</button>
+            <button class="filter" data-køn="desserter">Desserter</button>
+            <button class="filter" data-køn="drikkevarer">Drikkevarer</button>
+        </header>
+        <section id="list"></section>
+    </main>
+
+    <!-- ____PopUp-view på produkt____ -->
+    <!-- <section id="popop">
+      <article>
+        <p id="luk">X</p>
+
+        <h2></h2>
+        <img src="" alt="" />
+        <p></p>
+      </article>
+    </section> -->
+
+    <script>
+        // <!-- ______SÅ KNAPPERNE VIRKER______ -->
+
+        let personer;
+        let filter = "alle";
+        document.addEventListener("DOMContentLoaded", loadJSON)
+        const popop = document.querySelector("#popop");
+
+        async function loadJSON() {
+            const JSONData = await
+            fetch("https://spreadsheets.google.com/feeds/list/1X12aLU9AzyTNRiG9xer9NofQufUxZiSPcwtLHEQndko/od6/public/values?alt=json");
+            personer = await JSONData.json();
+            addEventListenersToButtons();
+            visPersoner();
+        }
+
+
+        //        https://spreadsheets.google.com/feeds/list/1X12aLU9AzyTNRiG9xer9NofQufUxZiSPcwtLHEQndko/od6/public/values?alt=json
+        //
+
+        function visPersoner() {
+            const templatePointer = document.querySelector("template");
+            const listPointer = document.querySelector("#list");
+            listPointer.innerHTML = "";
+            personer.feed.entry.forEach(person => {
+                console.log(filter);
+                if (filter == "alle" || filter == person.gsx$kategori.$t) {
+
+                    const minKlon = templatePointer.cloneNode(true).content;
+                    minKlon.querySelector("h2").textContent = person.gsx$navn.$t;
+                    minKlon.querySelector("img").src = "imgs/small/" + person.gsx$billede.$t + "-sm.jpg";
+                    minKlon.querySelector("p").textContent = person.gsx$pris.$t;
+
+
+
+                    minKlon.querySelector("article").addEventListener("click", () => visDetaljer(person));
+
+                    listPointer.appendChild(minKlon);
+
+                }
+
+            })
+
+        }
+
+        document.querySelector("#luk").addEventListener("click", () => popop.style.display = "none");
+
+
+
+
+
+        function visDetaljer(person) {
+            console.log(person);
+            popop.querySelector("h2").textContent = person.gsx$navn.$t;
+            popop.querySelector("h2").textContent += " " + person.gsx$efternavn.$t;
+            popop.querySelector("img").src = imgs / small / person.gsx$billede.$t;
+            popop.style.display = "block";
+        }
+
+
+        function addEventListenersToButtons() {
+            document.querySelectorAll(".filter").forEach((btn) => {
+                btn.addEventListener("click", filterBTNs);
+            });
+
+        }
+
+        function filterBTNs() {
+            filter = this.dataset.køn;
+            document.querySelector("h1").textContent = this.textContent;
+            document.querySelectorAll(".filter").forEach((btn) => {
+                btn.classList.remove("valgt");
+            })
+            this.classList.add("valgt");
+            visPersoner();
+        }
+        //   _____^Teams^_____
+
+
+
+        // __________LOOP VIEW / FILTRERING PÅ PRODUKTER PÅ SIDEN HER_________
+
+        //    let filter = "k";
+        //    let personer;
+        //    document.addEventListener("DOMContentLoaded", loadJSON)
+
+        //    async function loadJSON() {
+        //    const JSONData = await
+        //    fetch("LINK HER");
+        //    personer = await JSONData.json();
+        //    visPersoner();
+        //    }
+
+        //    function visPersoner() {
+        //    const templatePointer = document.querySelector("template");
+        //    const listPointer = document.querySelector("#list");
+        //    personer.feed.entry.forEach(person => {
+        //    if (filter == person.gsx$køn.$t.toLowerCase()){
+        //    console.log(person);
+        //    const minKlon = templatePointer.cloneNode(true).content;
+        //    minKlon.querySelector("h2").textContent = person.gsx$navn.$t;
+        //    minKlon.querySelector("img").src = person.gsx$billede.$t;
+        //    listPointer.appendChild(minKlon);
+        //    }
+        //    })
+        //    }
+    </script>
+</body></html>
